@@ -1,3 +1,4 @@
+https://github.com/Interweave05/rm_test
 # TGU视觉组招新试题
 ## 1 基础题-魔方色块识别
 使用HSV识别出蓝色区域，BGR(RGB)识别出橙色区域。获取轮廓，计算矩形框中心点，并输出结果
