@@ -1,0 +1,91 @@
+#include <opencv2/opencv.hpp>
+#include <iostream>
+
+using namespace cv;
+using namespace std;
+
+int main() {
+    // 读取视频
+    VideoCapture cap("1.mp4");
+
+    // 红色的HSV范围
+    Scalar lower_red1(0, 130, 70);
+    Scalar upper_red1(9, 255, 255);
+    Scalar lower_red2(170, 120, 70);
+    Scalar upper_red2(180, 255, 255);
+
+    // 长宽比例范围
+    double min_ratio = 0.85;
+    double max_ratio = 1.28;
+
+    while (true) {
+        Point top_left(-1, -1); // 初始化最左上角的坐标
+
+        Mat frame, hsv, mask1, mask2, red;
+        bool ret = cap.read(frame);
+        if (!ret) {
+            break;
+        }
+
+        // 转换为HSV颜色空间
+        cvtColor(frame, hsv, COLOR_BGR2HSV);
+
+        // 生成红色掩码 (红色在HSV中的两个区间)
+        inRange(hsv, lower_red1, upper_red1, mask1);
+        inRange(hsv, lower_red2, upper_red2, mask2);
+
+        red = mask1 + mask2;
+
+        // 高斯滤波
+        GaussianBlur(red, red, Size(5, 5), 1);
+
+        // 均值滤波
+        blur(red, red, Size(3, 3));
+
+        // 中值滤波
+        medianBlur(red, red, 3);
+
+        // 开运算
+        morphologyEx(red, red, MORPH_OPEN, getStructuringElement(MORPH_RECT, Size(26, 26)));
+
+        // 闭运算
+        morphologyEx(red, red, MORPH_CLOSE, getStructuringElement(MORPH_RECT, Size(23, 23)));
+
+        // 腐蚀
+        // erode(red, red, getStructuringElement(MORPH_RECT, Size(3, 3)));
+
+        // 找到红色区域的轮廓
+        vector<vector<Point>> contours;
+        findContours(red, contours, RETR_EXTERNAL, CHAIN_APPROX_SIMPLE);
+
+        for (auto& contour : contours) {
+            double area = contourArea(contour);
+            Rect boundRect = boundingRect(contour);
+            double aspect_ratio = (double)boundRect.width / boundRect.height;
+
+            if (area > 300 && area < 5600 && aspect_ratio >= min_ratio && aspect_ratio <= max_ratio) {
+                // 绘制轮廓和边界框
+                rectangle(frame, boundRect.tl(), boundRect.br(), Scalar(0, 255, 0), 2);
+
+                // 找到最左上角的红色方块
+                if (top_left.x == -1 || (boundRect.x < top_left.x && boundRect.y < top_left.y)) {
+                    top_left = Point(boundRect.x, boundRect.y);
+                }
+            }
+        }
+
+        // 显示结果
+        imshow("image", frame);
+        // imshow("test", red);
+
+        // 按下 'q' 键退出
+        if (waitKey(10) == 'q') {
+            break;
+        }
+    }
+
+    cap.release();
+    destroyAllWindows();
+
+    return 0;
+}
