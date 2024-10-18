@@ -1,0 +1,37 @@
+#include <WiFi.h>
+#include <WebServer.h>
+
+const char* ssid = "hhy";  // 热点名称
+const char* password = "hhy20051106";  // 热点密码
+
+WebServer server;
+String message = "";  // 用于存储串口消息
+
+void setup() {
+  Serial.begin(115200);
+  WiFi.softAP(ssid, password);  // 启动热点
+
+  server.on("/", HTTP_GET, []() {
+    String html = "<html><head><meta charset='UTF-8'><title>串口消息</title>"
+                  "<script>setInterval(() => {fetch('/data').then(response => response.text()).then(data => {document.getElementById('output').innerHTML = data;});}, 1000);</script>"
+                  "</head><body><h1>串口消息</h1><pre id='output'>" + message + "</pre></body></html>";
+    server.send(200, "text/html", html);  // 返回网页
+  });
+
+  server.on("/data", HTTP_GET, []() {
+    server.send(200, "text/plain", message);  // 返回串口消息
+  });
+
+  server.begin();  // 启动服务器
+  Serial.println("HTTP server started");
+}
+
+void loop() {
+  server.handleClient();  // 处理客户端请求
+
+  // 检查是否有新的串口输入
+  if (Serial.available() > 0) {
+    String newMessage = Serial.readStringUntil('\n');  // 读取串口消息，直到换行符
+    message = newMessage + "\n";  // 添加新消息并换行
+  }
+}
