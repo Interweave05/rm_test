@@ -1,7 +1,7 @@
 https://github.com/Interweave05/rm_test
 # TGU视觉组招新试题 
 ## Pref.
-本项目所有代码均在Ubuntu 22.04.5 LTS (Jammy Jellyfish) + Opencv4环境下运行
+#### 本项目所有代码均在Ubuntu 22.04.5 LTS (Jammy Jellyfish) + Opencv4环境下运行。使用Pycharm和Visual Studio 2022进行编写
 ## 目录以及项目简介
 ### 1 基础题-魔方色块识别
 ##### 使用HSV识别出蓝色区域，BGR(RGB)识别出橙色区域。获取轮廓，计算矩形框中心点，并输出结果
